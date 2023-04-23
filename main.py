@@ -1,13 +1,15 @@
 import configparser
-
+import sys
 config = configparser.ConfigParser()
-config.read("test.ini")
 
-Sections = config.sections()
-for titles in Sections:
-    print(titles)
+InputControlFile = sys.argv[1]
+IniFile = sys.argv[2]
 
-with open("control", "r") as ControlFile:
+config.read(IniFile)
+
+
+
+with open(InputControlFile, "r") as ControlFile:
     lines = ControlFile.readlines()
     for row in lines: #check each line
         SourceTerm = "Package: "
@@ -50,4 +52,7 @@ config[SourcePkg] = {
 
 with open("test.ini", "w") as configFile:
     config.write(configFile, True)
-    
+
+Sections = config.sections()
+for titles in Sections:
+    print(titles)
