@@ -7,6 +7,14 @@ IniFile = sys.argv[2]
 
 config.read(IniFile)
 
+# define at blank in case they never get filled
+SourcePkg = ""
+VersionPkg = ""
+ArchPkg = ""
+MaintanerPkg = ""
+DependsPkg = ""
+
+
 
 
 with open(InputControlFile, "r") as ControlFile:
@@ -38,6 +46,9 @@ with open(InputControlFile, "r") as ControlFile:
             DependsPkg = row.replace(DependsTerm, "")
             DependsPkg = DependsPkg.replace("\n", "") 
             
+
+
+
 config[SourcePkg] = {
     "Version" : VersionPkg,
     "Architecture" : ArchPkg,
