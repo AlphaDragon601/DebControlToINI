@@ -33,12 +33,38 @@ uninstallerFxn(){
 
 }
 
+builderFxn(){
+    DebToIniPrgm=$(readlink -f DebToIni.py)
+    RemovePkgPrgm=$(readlink -f RemovePkgFromIni.py)
+    PackageListerPrgm=$(readlink -f PackageListMaker.py)
+    IniFile=$(readlink -f test.ini)
+
+    WrkDir=$(mktemp -d)
+    cd $WrkDir
+    dpkg-query -f '${binary:Package}\n' -W > packagesList.txt #list of installed packages
+    python3 ${PackageListerPrgm} ${IniFile} > ConfigPackagesList.txt #list of packages in config
+
+    PackagesInstalledNum=$(wc -l < packagesList.txt) #count lines in packageList
+
+    for Pkg in $(seq 1 $PackagesInstalledNum)
+    do
+        LineContent=$(head -n $Pkg packagesList.txt | tail -1)
+        if grep -q $LineContent ConfigPackagesList.txt; then
+            echo found
+            echo $LineContent
+        fi
+    done
+}
+
+
 if [ x"$1" = "x" ]; then
     echo -e "no command entered, options are \n\t-u \n\t-r"
 elif [ "$1" = "-i" ]; then
     installerFxn $2
 elif [ "$1" = "-r" ]; then
     uninstallerFxn $2
+elif [ "$1" = "-b" ]; then
+    builderFxn
 else
     echo "command: $1 not found"
 fi

@@ -65,6 +65,3 @@ config[SourcePkg] = {
 with open(IniFile, "w") as configFile:
     config.write(configFile, True)
 
-# Sections = config.sections()
-# for titles in Sections:
-#     print(titles)
