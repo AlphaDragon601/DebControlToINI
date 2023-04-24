@@ -7,6 +7,7 @@ IniFile = sys.argv[2]
 
 config.read(IniFile)
 
+
 # define at blank in case they never get filled
 SourcePkg = ""
 VersionPkg = ""
@@ -61,9 +62,9 @@ config[SourcePkg] = {
 
 
 
-with open("test.ini", "w") as configFile:
+with open(IniFile, "w") as configFile:
     config.write(configFile, True)
 
-Sections = config.sections()
-for titles in Sections:
-    print(titles)
+# Sections = config.sections()
+# for titles in Sections:
+#     print(titles)
