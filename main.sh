@@ -25,4 +25,20 @@ installerFxn() {
     python3 ${DebToIniPrgm} control ${IniFile}
 }
 
-installerFxn http://http.us.debian.org/debian/pool/main/n/neovim/neovim_0.4.4-1_amd64.deb
+uninstallerFxn(){
+    RemovePkgPrgm=$(readlink -f RemovePkgFromIni.py)
+    IniFile=$(readlink -f test.ini)
+    dpkg -r $1
+    python3 ${RemovePkgPrgm} ${IniFile} $1
+
+}
+
+if [ x"$1" = "x" ]; then
+    echo -e "no command entered, options are \n\t-u \n\t-r"
+elif [ "$1" = "-i" ]; then
+    installerFxn $2
+elif [ "$1" = "-r" ]; then
+    uninstallerFxn $2
+else
+    echo "command: $1 not found"
+fi
