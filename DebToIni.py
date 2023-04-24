@@ -4,6 +4,8 @@ config = configparser.ConfigParser()
 
 InputControlFile = sys.argv[1]
 IniFile = sys.argv[2]
+URL = sys.argv[3]
+
 
 config.read(IniFile)
 
@@ -54,8 +56,8 @@ config[SourcePkg] = {
     "Version" : VersionPkg,
     "Architecture" : ArchPkg,
     "Maintainer" : MaintanerPkg,
-    "Depends" : DependsPkg
-
+    "Depends" : DependsPkg,
+    "URL" : URL
     
 }
 

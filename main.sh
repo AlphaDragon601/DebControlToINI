@@ -1,5 +1,14 @@
 #!/bin/bash
 
+
+DebToIniPrgm=$(readlink -f DebToIni.py)
+RemovePkgPrgm=$(readlink -f RemovePkgFromIni.py)
+PackageListerPrgm=$(readlink -f PackageListMaker.py)
+UrlGetterPrgm=$(readlink -f UrlGetter.py)
+IniFile=$(readlink -f test.ini)
+RemovePkgPrgm=$(readlink -f RemovePkgFromIni.py)
+
+
 trap cleanup 1 2 3 6
 cleanup() {
     echo -e "\nRemoving temporary files..."
@@ -11,8 +20,6 @@ installerFxn() {
     WrkDir=$(mktemp -d)
     wget $1 -P $WrkDir/
 
-    DebToIniPrgm=$(readlink -f DebToIni.py)
-    IniFile=$(readlink -f test.ini)
     cd $WrkDir
 
     PkgFile=$(ls | grep *.deb)
@@ -22,36 +29,35 @@ installerFxn() {
 
     tar -xf control.tar.xz
     dpkg --force-all -i $PkgFile
-    python3 ${DebToIniPrgm} control ${IniFile}
+    python3 ${DebToIniPrgm} control ${IniFile} $1
+
 }
 
 uninstallerFxn(){
-    RemovePkgPrgm=$(readlink -f RemovePkgFromIni.py)
-    IniFile=$(readlink -f test.ini)
     dpkg -r $1
     python3 ${RemovePkgPrgm} ${IniFile} $1
 
 }
 
 builderFxn(){
-    DebToIniPrgm=$(readlink -f DebToIni.py)
-    RemovePkgPrgm=$(readlink -f RemovePkgFromIni.py)
-    PackageListerPrgm=$(readlink -f PackageListMaker.py)
-    IniFile=$(readlink -f test.ini)
+
 
     WrkDir=$(mktemp -d)
     cd $WrkDir
     dpkg-query -f '${binary:Package}\n' -W > packagesList.txt #list of installed packages
     python3 ${PackageListerPrgm} ${IniFile} > ConfigPackagesList.txt #list of packages in config
 
-    PackagesInstalledNum=$(wc -l < packagesList.txt) #count lines in packageList
+    PackagesInstalledNum=$(wc -l < ConfigPackagesList.txt) #count lines in packageList
 
     for Pkg in $(seq 1 $PackagesInstalledNum)
     do
-        LineContent=$(head -n $Pkg packagesList.txt | tail -1)
-        if grep -q $LineContent ConfigPackagesList.txt; then
-            echo found
-            echo $LineContent
+        LineContent=$(head -n $Pkg ConfigPackagesList.txt | tail -1)
+        if grep -q $LineContent packagesList.txt; then
+            echo found $LineContent
+        else
+            URL=$(python3 ${UrlGetterPrgm} ${IniFile} ${LineContent})
+            cd ..
+            installerFxn $URL
         fi
     done
 }
