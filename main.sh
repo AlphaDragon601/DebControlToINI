@@ -31,7 +31,7 @@ installerFxn() {
 
     cd $WrkDir
 
-    PkgFile=$(ls | grep *.deb)
+    PkgFile=$(ls *.deb)
     echo $PkgFile
 
     ar -x $PkgFile
