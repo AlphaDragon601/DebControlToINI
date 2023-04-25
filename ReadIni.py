@@ -20,13 +20,3 @@ elif RequestedVal == "d":
 elif RequestedVal == "u":
     print(config[PrgmSection]["URL"])
 
-
-# print(config.sections())
-# for section in config.sections():
-#     print(section)
-#     print("\t" + config[section]["version"])
-#     print("\t" + config[section]["architecture"])
-#     print("\t" + config[section]["maintainer"])
-#     print("\t" + config[section]["depends"])
-#     print("\n*********\n")
-

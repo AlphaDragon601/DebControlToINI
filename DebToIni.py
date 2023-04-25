@@ -3,8 +3,11 @@ import sys
 config = configparser.ConfigParser()
 
 InputControlFile = sys.argv[1]
+
 IniFile = sys.argv[2]
+
 URL = sys.argv[3]
+
 Override = sys.argv[4]
 
 config.read(IniFile)
@@ -51,24 +54,29 @@ with open(InputControlFile, "r") as ControlFile:
             
 
 
-
+# check if the program is already listed in the config
 if config.has_section(SourcePkg):
+    #check if the reading from the control file doesn't match our config
     if config[SourcePkg]["version"] != VersionPkg:
         DiffVersion = True
     else:
         DiffVersion = False
+        
     if config[SourcePkg]["architecture"] != ArchPkg:
         DiffArch = True
     else:
         DiffArch = False
+        
     if config[SourcePkg]["maintainer"] != MaintanerPkg:
         DiffMaintainer = True
     else:
         DiffMaintainer = False
+        
     if config[SourcePkg]["depends"] != DependsPkg:
         DiffDepends = True
     else:
         DiffDepends = False
+        
     if Override != "o":
         print(SourcePkg)
         for i in [DiffVersion,DiffArch,DiffMaintainer,DiffDepends]:
@@ -85,7 +93,8 @@ else:
     
     with open(IniFile, "w") as configFile:
         config.write(configFile, True)
-
+        
+#for use by the bash script after the user has said "yes install anyways"
 if Override == "o":
     config[SourcePkg] = {
         "Version" : VersionPkg,

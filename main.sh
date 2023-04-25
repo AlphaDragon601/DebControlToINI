@@ -34,15 +34,15 @@ installerFxn() {
     ar -x $PkgFile
 
     tar -xf control.tar.xz
-    
+    # outputs the status of config vs control differences to a temp file
     python3 ${DebToIniPrgm} control ${IniFile} $1 n >> PyOut
-    # cat PyOut
+    # put the info from the file to variables
     PkgName=$(head -n 1 PyOut | tail -1)
     DiffVersion=$(head -n 2 PyOut | tail -1)
     DiffArch=$(head -n 3 PyOut | tail -1)
     DiffMaintainer=$(head -n 4 PyOut | tail -1)
     DiffDepends=$(head -n 5 PyOut | tail -1)
-
+    #check each variable to see if there was a difference we need to ask the user about
     if [ "$DiffVersion" = "True" ]; then
         read -p "New package has a different version than current, overwrite the old? " yn1
         if [ "$yn1" = "" ]; then
@@ -72,7 +72,7 @@ installerFxn() {
         python3 $DebToIniPrgm control ${IniFile} $1 o 
         dpkg --force-all -i $PkgFile
     fi
-
+    # if the file said no difference just install it like normal
     if [ "$DiffVersion" = "False" ] && [ "$DiffArch" = "False" ] && [ "$DiffMaintainer" = "False" ] && [ "$DiffDepends" = "False" ]; then
         dpkg --force-all -i $PkgFile
     fi
