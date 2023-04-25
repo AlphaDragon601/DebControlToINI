@@ -1,20 +1,23 @@
 #!/bin/bash
 
+#get absolute paths to all the programs we need
+IniFile=$(readlink -f test.ini)
+
 
 DebToIniPrgm=$(readlink -f DebToIni.py)
 RemovePkgPrgm=$(readlink -f RemovePkgFromIni.py)
 PackageListerPrgm=$(readlink -f PackageListMaker.py)
 UrlGetterPrgm=$(readlink -f UrlGetter.py)
-IniFile=$(readlink -f test.ini)
 RemovePkgPrgm=$(readlink -f RemovePkgFromIni.py)
 ReadIniPrgm=$(readlink -f ReadIni.py)
 
+#default these to y so the user can spam enter
 yn1="y"
 yn2="y"
 yn3="y"
 yn4="y"
 
-
+#cleanup the temporary dir
 trap cleanup 1 2 3 6
 cleanup() {
     echo -e "\nRemoving temporary files..."
@@ -93,13 +96,13 @@ builderFxn(){
     dpkg-query -f '${binary:Package}\n' -W > packagesList.txt #list of installed packages
     python3 ${PackageListerPrgm} ${IniFile} > ConfigPackagesList.txt #list of packages in config
 
-    PackagesInstalledNum=$(wc -l < ConfigPackagesList.txt) #count lines in packageList
-
-    for Pkg in $(seq 1 $PackagesInstalledNum)
+    ConfigPackagesNum=$(wc -l < ConfigPackagesList.txt) #count lines in packageList
+    echo "checking for packages to install..."
+    for Pkg in $(seq 1 $ConfigPackagesNum)
     do
         LineContent=$(head -n $Pkg ConfigPackagesList.txt | tail -1)
-        if grep -q $LineContent packagesList.txt; then
-            echo found $LineContent
+        if grep -qw $LineContent packagesList.txt; then # grep needs option -q to make it a boolean output and w for whole world search
+            echo $LineContent is installed
         else
             URL=$(python3 ${UrlGetterPrgm} ${IniFile} ${LineContent})
             cd ..
