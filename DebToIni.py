@@ -5,7 +5,7 @@ config = configparser.ConfigParser()
 InputControlFile = sys.argv[1]
 IniFile = sys.argv[2]
 URL = sys.argv[3]
-
+Override = sys.argv[4]
 
 config.read(IniFile)
 
@@ -52,18 +52,51 @@ with open(InputControlFile, "r") as ControlFile:
 
 
 
-config[SourcePkg] = {
-    "Version" : VersionPkg,
-    "Architecture" : ArchPkg,
-    "Maintainer" : MaintanerPkg,
-    "Depends" : DependsPkg,
-    "URL" : URL
+if config.has_section(SourcePkg):
+    if config[SourcePkg]["version"] != VersionPkg:
+        DiffVersion = True
+    else:
+        DiffVersion = False
+    if config[SourcePkg]["architecture"] != ArchPkg:
+        DiffArch = True
+    else:
+        DiffArch = False
+    if config[SourcePkg]["maintainer"] != MaintanerPkg:
+        DiffMaintainer = True
+    else:
+        DiffMaintainer = False
+    if config[SourcePkg]["depends"] != DependsPkg:
+        DiffDepends = True
+    else:
+        DiffDepends = False
+    if Override != "o":
+        print(SourcePkg)
+        for i in [DiffVersion,DiffArch,DiffMaintainer,DiffDepends]:
+            print(i)
+        
+else:
+    config[SourcePkg] = {
+        "Version" : VersionPkg,
+        "Architecture" : ArchPkg,
+        "Maintainer" : MaintanerPkg,
+        "Depends" : DependsPkg,
+        "URL" : URL
+    }
     
-}
+    with open(IniFile, "w") as configFile:
+        config.write(configFile, True)
+
+if Override == "o":
+    config[SourcePkg] = {
+        "Version" : VersionPkg,
+        "Architecture" : ArchPkg,
+        "Maintainer" : MaintanerPkg,
+        "Depends" : DependsPkg,
+        "URL" : URL
+    }
+    
+    with open(IniFile, "w") as configFile:
+        config.write(configFile, True)
 
 
-
-
-with open(IniFile, "w") as configFile:
-    config.write(configFile, True)
 

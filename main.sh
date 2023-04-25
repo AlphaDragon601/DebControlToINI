@@ -7,6 +7,12 @@ PackageListerPrgm=$(readlink -f PackageListMaker.py)
 UrlGetterPrgm=$(readlink -f UrlGetter.py)
 IniFile=$(readlink -f test.ini)
 RemovePkgPrgm=$(readlink -f RemovePkgFromIni.py)
+ReadIniPrgm=$(readlink -f ReadIni.py)
+
+yn1="y"
+yn2="y"
+yn3="y"
+yn4="y"
 
 
 trap cleanup 1 2 3 6
@@ -28,8 +34,48 @@ installerFxn() {
     ar -x $PkgFile
 
     tar -xf control.tar.xz
-    dpkg --force-all -i $PkgFile
-    python3 ${DebToIniPrgm} control ${IniFile} $1
+    
+    python3 ${DebToIniPrgm} control ${IniFile} $1 n >> PyOut
+    # cat PyOut
+    PkgName=$(head -n 1 PyOut | tail -1)
+    DiffVersion=$(head -n 2 PyOut | tail -1)
+    DiffArch=$(head -n 3 PyOut | tail -1)
+    DiffMaintainer=$(head -n 4 PyOut | tail -1)
+    DiffDepends=$(head -n 5 PyOut | tail -1)
+
+    if [ "$DiffVersion" = "True" ]; then
+        read -p "New package has a different version than current, overwrite the old? " yn1
+        if [ "$yn1" = "" ]; then
+            yn1="y"
+        fi
+    fi
+    if [ "$DiffArch" = "True" ]; then
+        read -p "New package has a different architecture than current, overwrite the old? " yn2
+        if [ "$yn2" = "" ]; then
+          yn2="y"
+        fi
+    fi
+    if [ "$DiffMaintainer" = "True" ]; then
+        read -p "New package has a different maintainer than current, overwrite the old? " yn3
+        if [ "$yn3" = "" ]; then
+            yn3="y"
+        fi
+    fi
+    if [ "$DiffDepends" = "True" ]; then
+        read -p "New package has different depends than current, overwrite the old? " yn4
+        if [ "$yn4" = "" ]; then
+            yn4="y"
+        fi
+    fi
+
+    if [ "$yn1" = "y"  ] && [ "$yn2" = "y"  ] && [ "$yn3" = "y"  ] && [ "$yn4" = "y"  ]; then
+        python3 $DebToIniPrgm control ${IniFile} $1 o 
+        dpkg --force-all -i $PkgFile
+    fi
+
+    if [ "$DiffVersion" = "False" ] && [ "$DiffArch" = "False" ] && [ "$DiffMaintainer" = "False" ] && [ "$DiffDepends" = "False" ]; then
+        dpkg --force-all -i $PkgFile
+    fi
 
 }
 
