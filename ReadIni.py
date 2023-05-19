@@ -19,4 +19,6 @@ elif RequestedVal == "d":
     print(config[PrgmSection]["depends"])
 elif RequestedVal == "u":
     print(config[PrgmSection]["URL"])
+elif RequestedVal == "de":
+    print(config[PrgmSection]["description"])
 

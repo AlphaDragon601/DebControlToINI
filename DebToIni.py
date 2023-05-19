@@ -19,7 +19,7 @@ VersionPkg = ""
 ArchPkg = ""
 MaintanerPkg = ""
 DependsPkg = ""
-
+DescTerm = ""
 
 
 
@@ -31,6 +31,7 @@ with open(InputControlFile, "r") as ControlFile:
         ArchTerm = "Architecture: "
         MaintanerTerm = "Maintainer: "
         DependsTerm = "Depends: "
+        DescTerm = "Description: "
         
         if row.find(SourceTerm) != -1:
             SourcePkg = row.replace(SourceTerm, "") # replace "source: " with nothing leaving just the title
@@ -51,6 +52,10 @@ with open(InputControlFile, "r") as ControlFile:
         if row.find(DependsTerm) != -1:
             DependsPkg = row.replace(DependsTerm, "")
             DependsPkg = DependsPkg.replace("\n", "") 
+            
+        if row.find(DescTerm) != -1:
+            DescPkg = row.replace(DescTerm, "") # replace "source: " with nothing leaving just the title
+            DescPkg = DescPkg.replace("\n", "") #remove newline
             
 
 
@@ -77,9 +82,14 @@ if config.has_section(SourcePkg):
     else:
         DiffDepends = False
         
+    if config[SourcePkg]["description"] != DescPkg:
+        DiffDesc = True
+    else:
+        DiffDesc = False
+        
     if Override != "o":
         print(SourcePkg)
-        for i in [DiffVersion,DiffArch,DiffMaintainer,DiffDepends]:
+        for i in [DiffVersion,DiffArch,DiffMaintainer,DiffDepends, DiffDesc]:
             print(i)
         
 else:
@@ -88,7 +98,8 @@ else:
         "Architecture" : ArchPkg,
         "Maintainer" : MaintanerPkg,
         "Depends" : DependsPkg,
-        "URL" : URL
+        "URL" : URL,
+        "Description" : DescPkg
     }
     
     with open(IniFile, "w") as configFile:
@@ -101,7 +112,8 @@ if Override == "o":
         "Architecture" : ArchPkg,
         "Maintainer" : MaintanerPkg,
         "Depends" : DependsPkg,
-        "URL" : URL
+        "URL" : URL,
+        "Description" : DescPkg
     }
     
     with open(IniFile, "w") as configFile:
