@@ -21,4 +21,7 @@ elif RequestedVal == "u":
     print(config[PrgmSection]["URL"])
 elif RequestedVal == "de":
     print(config[PrgmSection]["description"])
-
+elif RequestedVal == "l":
+    for Section in config:
+        if Section != "DEFAULT":
+            print(Section)

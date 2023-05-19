@@ -145,6 +145,8 @@ elif [ "$1" = "-b" ]; then
     builderFxn
 elif [ "$1" = "-u" ]; then
     updaterFxn $2
+elif [ "$1" = "-l" ]; then
+    python3 ${ReadIniPrgm} ${IniFile} n l
 else
     echo "command: $1 not found"
 fi
