@@ -25,6 +25,29 @@ cleanup() {
     exit
 }
 
+
+updaterFxn() {
+    WrkDir=$(mktemp -d)
+    wget https://packages.debian.org/bullseye/amd64/allpackages?format=txt.gz -P $WrkDir/
+    cd $WrkDir
+    ListFile=$(ls *.gz)
+    gzip -d $ListFile
+    ListFile=$(ls)
+    PkgDesc=$(python3 ${ReadIniPrgm} ${IniFile} $1 "de")
+    PkgResult=$(grep -w "$1" $ListFile | grep "$PkgDesc" $ListFile)
+    PkgVer=$(echo $PkgResult | awk -F"[()]" '{print $2}') #extract version # from btwn ()
+    echo "Found version: $PkgVer"
+    UpVersion=$(python3 ${ReadIniPrgm} ${IniFile} $1 "v")
+    if [ "$PkgVer" == "$UpVersion" ]; then
+        echo "Program is up to date"
+    else
+        echo "Found version: $PkgVer online, installed is version $UpVersion"
+    fi
+    
+}
+
+
+
 installerFxn() {
     WrkDir=$(mktemp -d)
     wget $1 -P $WrkDir/
@@ -104,7 +127,7 @@ builderFxn(){
         if grep -qw $LineContent packagesList.txt; then # grep needs option -q to make it a boolean output and w for whole world search
             echo $LineContent is installed
         else
-            URL=$(python3 ${UrlGetterPrgm} ${IniFile} ${LineContent})
+            URL=$(python3 ${ReadIniPrgm} ${IniFile} ${LineContent} "u")
             cd ..
             installerFxn $URL
         fi
@@ -120,6 +143,8 @@ elif [ "$1" = "-r" ]; then
     uninstallerFxn $2
 elif [ "$1" = "-b" ]; then
     builderFxn
+elif [ "$1" = "-u" ]; then
+    updaterFxn $2
 else
     echo "command: $1 not found"
 fi
