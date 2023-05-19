@@ -117,9 +117,10 @@ builderFxn(){
     WrkDir=$(mktemp -d)
     cd $WrkDir
     dpkg-query -f '${binary:Package}\n' -W > packagesList.txt #list of installed packages
-    python3 ${PackageListerPrgm} ${IniFile} > ConfigPackagesList.txt #list of packages in config
+    python3 ${ReadIniPrgm} ${IniFile} null l > ConfigPackagesList.txt #list of packages in config
 
     ConfigPackagesNum=$(wc -l < ConfigPackagesList.txt) #count lines in packageList
+    packagesListNum=$(wc -l < packagesList.txt)
     echo "checking for packages to install..."
     for Pkg in $(seq 1 $ConfigPackagesNum)
     do
@@ -132,7 +133,42 @@ builderFxn(){
             installerFxn $URL
         fi
     done
+    echo "checking for packages to uninstall..."
+    for Pkg in $(seq 1 $packagesListNum)
+    do
+        LineContent=$(head -n $Pkg packagesList.txt | tail -1)
+        if grep -qw $LineContent ConfigPackagesList.txt; then # grep needs option -q to make it a boolean output and w for whole world search
+            echo $LineContent is in config
+        else
+            read -p "$LineContent is not in config, would you like to uninstall it?(y/n)" $yn1
+            if [ "$yn1" == "y" ]; then
+                uninstallerFxn $LineContent
+            fi
+        fi
+    done
+
 }
+
+DpkgBackupFxn(){
+    WrkDir=$(mktemp -d)
+    cd $WrkDir
+
+    dpkg-query -f '${binary:Package}\n' -W > packagesList.txt #list of installed packages
+    python3 ${ReadIniPrgm} ${IniFile} null l > ConfigPackagesList.txt #list of packages in config
+    packagesListNum=$(wc -l < packagesList.txt)
+    ConfigPackagesNum=$(wc -l < ConfigPackagesList.txt) #count lines in packageList
+    for Pkg in $(seq 1 $packagesListNum)
+    do
+    LineContent=$(head -n $Pkg packagesList.txt | tail -1)
+        if grep -qw "$LineContent" ConfigPackagesList.txt; then
+            echo "found $LineContent"
+        else
+            echo -e "\n[$LineContent]" >> $IniFile
+        fi
+    done
+}
+
+
 
 
 if [ x"$1" = "x" ]; then
@@ -147,6 +183,8 @@ elif [ "$1" = "-u" ]; then
     updaterFxn $2
 elif [ "$1" = "-l" ]; then
     python3 ${ReadIniPrgm} ${IniFile} n l
+elif [ "$1" = "-c" ]; then
+    DpkgBackupFxn
 else
     echo "command: $1 not found"
 fi
