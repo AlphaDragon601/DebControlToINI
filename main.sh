@@ -27,24 +27,28 @@ cleanup() {
 
 
 updaterFxn() {
-    WrkDir=$(mktemp -d)
-    wget https://packages.debian.org/bullseye/amd64/allpackages?format=txt.gz -P $WrkDir/
-    cd $WrkDir
-    ListFile=$(ls *.gz)
-    gzip -d $ListFile
-    ListFile=$(ls)
-    PkgDesc=$(python3 ${ReadIniPrgm} ${IniFile} $1 "de")
-    PkgResult=$(grep -w "$1" $ListFile | grep "$PkgDesc" $ListFile)
-    PkgVer=$(echo $PkgResult | awk -F"[()]" '{print $2}') #extract version # from btwn ()
-    echo "Found Version: $PkgVer"
-    UpVersion=$(python3 ${ReadIniPrgm} ${IniFile} $1 "v")
-    echo "Found Version: $UpVersion"
-    if [ "$PkgVer" = "$UpVersion" ]; then
-        echo "Program is up to date"
-    else
-        echo "Found version: $PkgVer online, installed is version $UpVersion"
-    fi
     
+    PkgDesc=$(python3 ${ReadIniPrgm} ${IniFile} $1 "de") #this needs to be run first because it checks of $1 is a package as well as grabs data
+    if [ "$PkgDesc" = "Unable to find program: ${1} is it installed?" ];then
+        echo "Unable to find package: ${1}"
+    else
+        WrkDir=$(mktemp -d)
+        wget https://packages.debian.org/bullseye/amd64/allpackages?format=txt.gz -P $WrkDir/
+        cd $WrkDir
+        ListFile=$(ls *.gz)
+        gzip -d $ListFile
+        ListFile=$(ls)
+        PkgResult=$(grep -w "$1" $ListFile | grep "$PkgDesc" $ListFile)
+        PkgVer=$(echo $PkgResult | awk -F"[()]" '{print $2}') #extract version # from btwn ()
+        echo "Found Version: $PkgVer"
+        UpVersion=$(python3 ${ReadIniPrgm} ${IniFile} $1 "v")
+        echo "Found Version: $UpVersion"
+        if [ "$PkgVer" = "$UpVersion" ]; then
+            echo "Program is up to date"
+        else
+            echo "Found version: $PkgVer online, installed is version $UpVersion"
+        fi
+    fi
 }
 
 

@@ -8,6 +8,11 @@ PrgmSection = sys.argv[2]
 RequestedVal = sys.argv[3]
 config.read(configFile)
 
+try:
+    print(config[PrgmSection])
+except:
+    print("Unable to find program: " + PrgmSection + " ,is it installed?")
+    sys.exit()
 
 if RequestedVal == "v":
     print(config[PrgmSection]["version"])
