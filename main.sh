@@ -170,7 +170,7 @@ DpkgBackupFxn(){
 }
 
 infoAdderFxn(){
-    echo "What info do you want to add? \n-(v)version\n-(a)architecture\n-(m)maintainer\n-(d)depends\n-url\n-(de)description"
+    echo "What info do you want to add? \n-(v)version\n-(a)architecture\n-(m)maintainer\n-(d)depends\n-(u)url\n-(de)description"
     read ChosenInfo
     case $ChosenInfo in
         v)
