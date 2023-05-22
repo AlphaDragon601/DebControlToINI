@@ -1,5 +1,9 @@
 #!/bin/bash
 
+#fun text stuff
+ItalicsStart="\e[3m"
+ReturnToNorm="\e[0m"
+
 #get absolute paths to all the programs we need
 IniFile=$(readlink -f config.ini)
 
@@ -131,10 +135,11 @@ builderFxn(){
     for Pkg in $(seq 1 $ConfigPackagesNum)
     do
         LineContent=$(head -n $Pkg ConfigPackagesList.txt | tail -1)
+        echo $LineContent
         if grep -qw $LineContent packagesList.txt; then # grep needs option -q to make it a boolean output and w for whole world search
             echo $LineContent is installed
         else
-            URL=$(python3 ${ReadIniPrgm} ${IniFile} ${LineContent} "u")
+            URL=$(python3 ${ReadIniPrgm} ${IniFile} ${LineContent} "u") #Get the url from the 
             cd ..
             installerFxn $URL
         fi
@@ -208,21 +213,26 @@ infoAdderFxn(){
 
 }
 
-CmdInfo="no command entered, options are:
- \n\t-i to install a url 
- \n\t-r to remove packages 
- \n\t-u to check for a program for updates 
- \n\t-d to list config dependencies 
- \n\t-a add info to a package
- \n\t-l to list installed (based on config) 
- \n\t-c to copy current packages into the config"
+CmdInfo="
+ \t-h for this list
+ \t-i to install a url [main.sh -i ${ItalicsStart}pkg-url${ReturnToNorm}]
+ \t-r to remove packages [main.sh -r ${ItalicsStart}pkg-name${ReturnToNorm}]
+ \t-u to check for a program for updates [main.sh -u ${ItalicsStart}pkg-name${ReturnToNorm}]
+ \t-d to list config dependencies [main.sh -d]
+ \t-a add info to a package [main.sh -a ${ItalicsStart}pkg-name${ReturnToNorm}]
+ \t-l to list installed (based on config) [main.sh -l]
+ \t-c to copy current packages into the config [main.sh -c]" 
 
 
 if [ x"$1" = "x" ]; then
-    echo $CmdInfo
+    echo "no command entered, options are: $CmdInfo"
 else
     case $1 in
+        -h)
+            echo "Command options are: $CmdInfo"
+            ;;
         -i)
+            #loop through each entry and run the installer on them
             shift
             for var in "$@"; do
                 echo "\n$var"
@@ -230,6 +240,7 @@ else
             done
             ;;
         -r)
+            #loop through each entry and run the uninstaller on them
             shift
             for var in "$@"; do
                 echo "\n$var"

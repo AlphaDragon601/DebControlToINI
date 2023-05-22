@@ -8,6 +8,14 @@ PrgmSection = sys.argv[2]
 RequestedVal = sys.argv[3]
 config.read(configFile)
 
+#list doesn't take a program section input so it can be done without checking
+if RequestedVal == "l":
+    for Section in config:
+        if Section != "DEFAULT":
+            print(Section)
+    sys.exit()
+    
+# check to make sure that program is in the config
 try:
     print(config[PrgmSection])
 except:
@@ -26,7 +34,3 @@ elif RequestedVal == "u":
     print(config[PrgmSection]["URL"])
 elif RequestedVal == "de":
     print(config[PrgmSection]["description"])
-elif RequestedVal == "l":
-    for Section in config:
-        if Section != "DEFAULT":
-            print(Section)

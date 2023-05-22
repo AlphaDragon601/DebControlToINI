@@ -92,7 +92,7 @@ if config.has_section(SourcePkg):
         for i in [DiffVersion,DiffArch,DiffMaintainer,DiffDepends, DiffDesc]:
             print(i)
         
-else:
+else: #if the package isn't there at all then just add it
     config[SourcePkg] = {
         "Version" : VersionPkg,
         "Architecture" : ArchPkg,
