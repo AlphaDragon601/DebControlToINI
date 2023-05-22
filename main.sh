@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #get absolute paths to all the programs we need
-IniFile=$(readlink -f test.ini)
+IniFile=$(readlink -f config.ini)
 
 
 DebToIniPrgm=$(readlink -f DebToIni.py)
@@ -10,7 +10,7 @@ PackageListerPrgm=$(readlink -f PackageListMaker.py)
 UrlGetterPrgm=$(readlink -f UrlGetter.py)
 RemovePkgPrgm=$(readlink -f RemovePkgFromIni.py)
 ReadIniPrgm=$(readlink -f ReadIni.py)
-
+InfoAdderPrgm=$(readlink -f InfoAdder.py)
 #default these to y so the user can spam enter
 yn1="y"
 yn2="y"
@@ -20,7 +20,7 @@ yn4="y"
 #cleanup the temporary dir
 trap cleanup 1 2 3 6
 cleanup() {
-    echo -e "\nRemoving temporary files..."
+    echo "\nRemoving temporary files..."
     rm -rf "$WrkDir"
     exit
 }
@@ -36,9 +36,10 @@ updaterFxn() {
     PkgDesc=$(python3 ${ReadIniPrgm} ${IniFile} $1 "de")
     PkgResult=$(grep -w "$1" $ListFile | grep "$PkgDesc" $ListFile)
     PkgVer=$(echo $PkgResult | awk -F"[()]" '{print $2}') #extract version # from btwn ()
-    echo "Found version: $PkgVer"
+    echo "Found Version: $PkgVer"
     UpVersion=$(python3 ${ReadIniPrgm} ${IniFile} $1 "v")
-    if [ "$PkgVer" == "$UpVersion" ]; then
+    echo "Found Version: $UpVersion"
+    if [ "$PkgVer" = "$UpVersion" ]; then
         echo "Program is up to date"
     else
         echo "Found version: $PkgVer online, installed is version $UpVersion"
@@ -51,7 +52,7 @@ updaterFxn() {
 installerFxn() {
     WrkDir=$(mktemp -d)
     wget $1 -P $WrkDir/
-
+    
     cd $WrkDir
 
     PkgFile=$(ls *.deb)
@@ -163,28 +164,84 @@ DpkgBackupFxn(){
         if grep -qw "$LineContent" ConfigPackagesList.txt; then
             echo "found $LineContent"
         else
-            echo -e "\n[$LineContent]" >> $IniFile
+            echo "\n[$LineContent]" >> $IniFile
         fi
     done
 }
 
+infoAdderFxn(){
+    echo "What info do you want to add? \n-(v)version\n-(a)architecture\n-(m)maintainer\n-(d)depends\n-url\n-(de)description"
+    read ChosenInfo
+    case $ChosenInfo in
+        v)
+            echo "you have selected version"
+            InfoSelection="version"
+            ;;
+        a)
+            echo "you have selected architecture"
+            InfoSelection="architecture"
+            ;;
+        m)
+            echo "you have selected maintainer"
+            InfoSelection="maintainer"
+            ;;
+        d)
+            echo "you have selected depends"
+            InfoSelection="depends"
+            ;;
+        de)
+            echo "you have selected description"
+            InfoSelection="description"
+            ;;
+        *)
+            echo "unkown request, please enter either v, a, m, d, or de"
+            ;;
 
+    esac
+    read -p "info to add as $InfoSelection: " info
+    python3 ${InfoAdderPrgm} ${1} ${IniFile} ${ChosenInfo} ${info}
+
+
+
+}
 
 
 if [ x"$1" = "x" ]; then
-    echo -e "no command entered, options are \n\t-u \n\t-r"
-elif [ "$1" = "-i" ]; then
-    installerFxn $2
-elif [ "$1" = "-r" ]; then
-    uninstallerFxn $2
-elif [ "$1" = "-b" ]; then
-    builderFxn
-elif [ "$1" = "-u" ]; then
-    updaterFxn $2
-elif [ "$1" = "-l" ]; then
-    python3 ${ReadIniPrgm} ${IniFile} n l
-elif [ "$1" = "-c" ]; then
-    DpkgBackupFxn
+    echo "no command entered, options are: \n\t-i to install a url \n\t-r to remove packages \n\t-u to check for a program for updates \n\t-a add info to a package\n\t-l to list installed (based on config) \n\t-c to copy current packages into the config"
 else
-    echo "command: $1 not found"
+    case $1 in
+        -i)
+            shift
+            for var in "$@"; do
+                echo "\n$var"
+                installerFxn $var
+            done
+            ;;
+        -r)
+            shift
+            for var in "$@"; do
+                echo "\n$var"
+                uninstallerFxn $var
+            done
+            ;;
+        -u)
+            updaterFxn $2
+            ;;
+        -a)
+            infoAdderFxn $2
+            ;;
+        -b)
+            builderFxn
+            ;;
+        -l)
+            python3 ${ReadIniPrgm} ${IniFile} n l
+            ;;
+        -c)
+            DpkgBackupFxn
+            ;;
+        *)
+            echo "option: $1 not found"
+            ;;
+    esac
+
 fi
