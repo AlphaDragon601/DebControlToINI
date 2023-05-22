@@ -1,12 +1,15 @@
 #!/bin/bash
 
+
+cd $(dirname $(readlink -f $0)) #take us to the directory of the script and its friends :)
+
+
 #fun text stuff
 ItalicsStart="\e[3m"
 ReturnToNorm="\e[0m"
 
 #get absolute paths to all the programs we need
 IniFile=$(readlink -f config.ini)
-
 
 DebToIniPrgm=$(readlink -f DebToIni.py)
 RemovePkgPrgm=$(readlink -f RemovePkgFromIni.py)
