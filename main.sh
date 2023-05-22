@@ -11,6 +11,7 @@ UrlGetterPrgm=$(readlink -f UrlGetter.py)
 RemovePkgPrgm=$(readlink -f RemovePkgFromIni.py)
 ReadIniPrgm=$(readlink -f ReadIni.py)
 InfoAdderPrgm=$(readlink -f InfoAdder.py)
+DepLister=$(readlink -f DepLister.py)
 #default these to y so the user can spam enter
 yn1="y"
 yn2="y"
@@ -205,13 +206,20 @@ infoAdderFxn(){
     read -p "info to add as $InfoSelection: " info
     python3 ${InfoAdderPrgm} ${1} ${IniFile} ${ChosenInfo} ${info}
 
-
-
 }
+
+CmdInfo="no command entered, options are:
+ \n\t-i to install a url 
+ \n\t-r to remove packages 
+ \n\t-u to check for a program for updates 
+ \n\t-d to list config dependencies 
+ \n\t-a add info to a package
+ \n\t-l to list installed (based on config) 
+ \n\t-c to copy current packages into the config"
 
 
 if [ x"$1" = "x" ]; then
-    echo "no command entered, options are: \n\t-i to install a url \n\t-r to remove packages \n\t-u to check for a program for updates \n\t-a add info to a package\n\t-l to list installed (based on config) \n\t-c to copy current packages into the config"
+    echo $CmdInfo
 else
     case $1 in
         -i)
@@ -230,6 +238,9 @@ else
             ;;
         -u)
             updaterFxn $2
+            ;;
+        -d)
+            python3 ${DepLister} ${IniFile}
             ;;
         -a)
             infoAdderFxn $2
