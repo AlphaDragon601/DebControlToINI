@@ -230,7 +230,7 @@ DpkgBackupFxn(){
 }
 
 infoAdderFxn(){
-    echo "What info do you want to add? \n-(v)version\n-(a)architecture\n-(m)maintainer\n-(d)depends\n-(u)url\n-(de)description"
+    echo "What info do you want to add? \n-(v)version\n-(a)architecture\n-(m)maintainer\n-(d)depends\n-(u)url\n-(de)description\n-(p)new package"
     read ChosenInfo
     case $ChosenInfo in
         v)
@@ -253,13 +253,21 @@ infoAdderFxn(){
             echo "you have selected description"
             InfoSelection="description"
             ;;
+        p)
+            echo "you have selected new package"
+            InfoSelection="new package"
+            ;;
         *)
             echo "unkown request, please enter either v, a, m, d, or de"
             ;;
 
     esac
-    read -p "info to add as $InfoSelection: " info
-    python3 ${InfoAdderPrgm} ${1} ${IniFile} ${ChosenInfo} ${info}
+    read -p "info to add in $InfoSelection: " info
+    if [ x"$1" != x ];then
+        python3 ${InfoAdderPrgm} ${1} ${IniFile} ${ChosenInfo} ${info}
+    else
+        python3 ${InfoAdderPrgm} placeholder ${IniFile} ${ChosenInfo} ${info}
+    fi
 
 }
 
@@ -269,7 +277,7 @@ CmdInfo="
  \t-r to remove packages [main.sh -r ${ItalicsStart}pkg-name${ReturnToNorm}]
  \t-u to check for a program for updates [main.sh -u ${ItalicsStart}pkg-name${ReturnToNorm}]
  \t-d to list config dependencies [main.sh -d]
- \t-a add info to a package [main.sh -a ${ItalicsStart}pkg-name${ReturnToNorm}]
+ \t-a add info to a package [main.sh -a ${ItalicsStart}pkg-name${ReturnToNorm} or if selecting option p main.sh -a]
  \t-l to list installed (based on config) [main.sh -l]
  \t-c to copy current packages into the config [main.sh -c]" 
 
