@@ -7,11 +7,11 @@
 ## Command Options (visible with -h)
 ```
   -h for this list
-  -i to install a url [main.sh -i **pkg-name**]
-  -r to remove packages [main.sh -r **pkg-name**]
-  -u to check for a program for updates [main.sh -u **pkg-name**]
+  -i to install a url [main.sh -i 𝑝𝑘𝑔-𝑛𝑎𝑚𝑒]
+  -r to remove packages [main.sh -r 𝑝𝑘𝑔-𝑛𝑎𝑚𝑒]
+  -u to check for a program for updates [main.sh -u 𝑝𝑘𝑔-𝑛𝑎𝑚𝑒]
   -d to list config dependencies [main.sh -d]
-  -a add info to a package [main.sh -a **pkg-name**]
+  -a add info to a package [main.sh -a 𝑝𝑘𝑔-𝑛𝑎𝑚𝑒]
   -l to list installed (based on config) [main.sh -l]
   -c to copy current packages into the config [main.sh -c]"
 ```
