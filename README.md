@@ -7,11 +7,11 @@
 ## Command Options (visible with -h)
 ```
   -h for this list
-  -i to install a url [main.sh -i ${ItalicsStart}pkg-name${ReturnToNorm}]
-  -r to remove packages [main.sh -r ${ItalicsStart}pkg-name${ReturnToNorm}]
-  -u to check for a program for updates [main.sh -u ${ItalicsStart}pkg-name${ReturnToNorm}]
+  -i to install a url [main.sh -i **pkg-name**]
+  -r to remove packages [main.sh -r **pkg-name**]
+  -u to check for a program for updates [main.sh -u **pkg-name**]
   -d to list config dependencies [main.sh -d]
-  -a add info to a package [main.sh -a ${ItalicsStart}pkg-name${ReturnToNorm}]
+  -a add info to a package [main.sh -a **pkg-name**]
   -l to list installed (based on config) [main.sh -l]
   -c to copy current packages into the config [main.sh -c]"
 ```
