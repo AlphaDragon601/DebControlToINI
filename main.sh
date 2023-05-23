@@ -155,6 +155,8 @@ installerFxn() {
     if [ "$yn1" = "y"  ] && [ "$yn2" = "y"  ] && [ "$yn3" = "y"  ] && [ "$yn4" = "y"  ]; then
         python3 $DebToIniPrgm control ${IniFile} ${PkgUrl} o 
         dpkg --force-all -i $PkgFile
+        else
+            echo "exiting..."
     fi
     # if the file said no difference just install it like normal
     if [ "$DiffVersion" = "False" ] && [ "$DiffArch" = "False" ] && [ "$DiffMaintainer" = "False" ] && [ "$DiffDepends" = "False" ]; then
@@ -187,7 +189,7 @@ builderFxn(){
         if grep -qw $LineContent packagesList.txt; then # grep needs option -q to make it a boolean output and w for whole world search
             echo $LineContent is installed
         else
-            URL=$(python3 ${ReadIniPrgm} ${IniFile} ${LineContent} "u") #Get the url from the 
+            URL=$(python3 ${ReadIniPrgm} ${IniFile} ${LineContent} "u") #Get the url from the config
             cd ..
             installerFxn $URL
         fi
@@ -263,7 +265,7 @@ infoAdderFxn(){
 
 CmdInfo="
  \t-h for this list
- \t-i to install a url [main.sh -i ${ItalicsStart}pkg-url${ReturnToNorm}]
+ \t-i to install a url [main.sh -i ${ItalicsStart}pkg-name${ReturnToNorm}]
  \t-r to remove packages [main.sh -r ${ItalicsStart}pkg-name${ReturnToNorm}]
  \t-u to check for a program for updates [main.sh -u ${ItalicsStart}pkg-name${ReturnToNorm}]
  \t-d to list config dependencies [main.sh -d]
