@@ -218,13 +218,15 @@ DpkgBackupFxn(){
     python3 ${ReadIniPrgm} ${IniFile} null l > ConfigPackagesList.txt #list of packages in config
     packagesListNum=$(wc -l < packagesList.txt)
     ConfigPackagesNum=$(wc -l < ConfigPackagesList.txt) #count lines in packageList
+    echo "this may take some time depending on how much to backup..."
     for Pkg in $(seq 1 $packagesListNum)
     do
     LineContent=$(head -n $Pkg packagesList.txt | tail -1)
         if grep -qw "$LineContent" ConfigPackagesList.txt; then
             echo "found $LineContent"
         else
-            echo "\n[$LineContent]" >> $IniFile
+            echo "adding $LineContent"
+            python3 ${InfoAdderPrgm} placeholder ${IniFile} p ${LineContent}
         fi
     done
 }
