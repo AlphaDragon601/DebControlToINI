@@ -34,38 +34,83 @@ cleanup() {
 }
 
 
+archFinderFxn(){
+    Search=$(lscpu | grep Architecture)
+
+    case $Search in
+    "Architecture:                    x86_64")
+        arch="amd64"
+        ;;
+    "Architecture:          i386")
+        arch="i386"
+
+    esac
+
+}
+
+
+
 updaterFxn() {
-    
-    PkgDesc=$(python3 ${ReadIniPrgm} ${IniFile} $1 "de") #this needs to be run first because it checks of $1 is a package as well as grabs data
-    if [ "$PkgDesc" = "Unable to find program: ${1} is it installed?" ];then
-        echo "Unable to find package: ${1}"
-    else
-        WrkDir=$(mktemp -d)
-        wget https://packages.debian.org/bullseye/amd64/allpackages?format=txt.gz -P $WrkDir/
-        cd $WrkDir
-        ListFile=$(ls *.gz)
-        gzip -d $ListFile
-        ListFile=$(ls)
-        PkgResult=$(grep -w "$1" $ListFile | grep "$PkgDesc" $ListFile)
-        PkgVer=$(echo $PkgResult | awk -F"[()]" '{print $2}') #extract version # from btwn ()
-        echo "Found Version: $PkgVer"
-        UpVersion=$(python3 ${ReadIniPrgm} ${IniFile} $1 "v")
-        echo "Found Version: $UpVersion"
-        if [ "$PkgVer" = "$UpVersion" ]; then
-            echo "Program is up to date"
+    if [ x"$1" != "x" ];then
+        PkgDesc=$(python3 ${ReadIniPrgm} ${IniFile} $1 "de") #this needs to be run first because it checks of $1 is a package as well as grabs data
+        if [ "$PkgDesc" = "Unable to find program: ${1} is it installed?" ];then
+            echo "Unable to find package: ${1}"
         else
-            echo "Found version: $PkgVer online, installed is version $UpVersion"
+            WrkDir=$(mktemp -d)
+            wget https://packages.debian.org/bullseye/amd64/allpackages?format=txt.gz -P $WrkDir/
+            cd $WrkDir
+            ListFile=$(ls *.gz)
+            gzip -d $ListFile
+            ListFile=$(ls)
+            PkgResult=$(grep -w "$1" $ListFile | grep "$PkgDesc" $ListFile)
+            PkgVer=$(echo $PkgResult | awk -F"[()]" '{print $2}') #extract version # from btwn ()
+            echo "Found Version: $PkgVer"
+            UpVersion=$(python3 ${ReadIniPrgm} ${IniFile} $1 "v")
+            UpVersion=${UpVersion#"<Section: ${1}>"}
+            echo "Found Version: $UpVersion"
+            if [ "$PkgVer" = "$UpVersion" ]; then
+                echo "Program is up to date"
+            else
+                echo "Found version: $PkgVer online, installed is version $UpVersion"
+            fi
         fi
+
+        else
+            echo "no program entered"
+
     fi
+    
 }
 
 
 
 installerFxn() {
     WrkDir=$(mktemp -d)
-    wget $1 -P $WrkDir/
+    # wget $1 -P $WrkDir/
+    archFinderFxn
+    wget https://packages.debian.org/bullseye/amd64/allpackages?format=txt.gz -P $WrkDir/
+
     
+
     cd $WrkDir
+
+
+    ListFile=$(ls *.gz)
+    gzip -d $ListFile
+    ListFile=$(ls)
+
+    name=$(grep -m 1 "${1} (" $ListFile)
+    info=$(echo $name | awk -F"[()]" '{print $2}')
+    firstChar=$(echo $name | cut -c1-1)
+    # echo $firstChar
+    # echo $info
+
+
+    PkgUrl="http://http.us.debian.org/debian/pool/main/${firstChar}/${1}/${1}_${info}_${arch}.deb"
+
+
+    wget $PkgUrl
+
 
     PkgFile=$(ls *.deb)
     echo $PkgFile
@@ -108,7 +153,7 @@ installerFxn() {
     fi
 
     if [ "$yn1" = "y"  ] && [ "$yn2" = "y"  ] && [ "$yn3" = "y"  ] && [ "$yn4" = "y"  ]; then
-        python3 $DebToIniPrgm control ${IniFile} $1 o 
+        python3 $DebToIniPrgm control ${IniFile} ${PkgUrl} o 
         dpkg --force-all -i $PkgFile
     fi
     # if the file said no difference just install it like normal
