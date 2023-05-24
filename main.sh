@@ -99,18 +99,35 @@ installerFxn() {
     gzip -d $ListFile
     ListFile=$(ls)
 
-    name=$(grep -m 1 "${1} (" $ListFile)
-    info=$(echo $name | awk -F"[()]" '{print $2}')
-    firstChar=$(echo $name | cut -c1-1)
-    # echo $firstChar
+    # name=$(grep "${1} (" $ListFile)
+    
+    touch TempGrepList
+    grep -w "${1}" $ListFile > TempGrepList
+    ResultCount=$(wc -l < TempGrepList)
+
+    for Result in $(seq 1 $ResultCount) 
+    do
+        LineContent=$(head -n $Result TempGrepList | tail -1)
+        echo "Found Result [${Result}]: ${LineContent}"
+    done
+    read -p "Which package would you like installed?: " PkgSelection
+    FullName=$(head -n $PkgSelection TempGrepList | tail -1)
+    info=$(echo $FullName | awk -F"[()]" '{print $2}')
+    firstChar=$(echo $FullName | cut -c1-1)
+    if [ "$(echo $name | cut -c1-3)" = "lib" ]; then
+                    firstChar="lib"
+    fi
+    ShortName=$(echo $FullName | cut -d " " -f 1)
+
+    # echo $FullName
+    # echo $ShortName
     # echo $info
+    # echo $firstChar
 
+    PkgUrl="http://http.us.debian.org/debian/pool/main/${firstChar}/${ShortName}/${ShortName}_${info}_${arch}.deb"
 
-    PkgUrl="http://http.us.debian.org/debian/pool/main/${firstChar}/${1}/${1}_${info}_${arch}.deb"
-
-
+    # echo $PkgUrl
     wget $PkgUrl
-
 
     PkgFile=$(ls *.deb)
     echo $PkgFile
@@ -229,6 +246,56 @@ DpkgBackupFxn(){
             python3 ${InfoAdderPrgm} placeholder ${IniFile} p ${LineContent}
         fi
     done
+    echo "Package adding done"
+    read -p "would you like to add urls for all of these? (this may be a while)" yn1
+    if [ "$yn1" = "y" ];then
+        FailedLinks=""
+        WrkDir=$(mktemp -d)
+        archFinderFxn
+        wget https://packages.debian.org/bullseye/amd64/allpackages?format=txt.gz -P $WrkDir/ #grab dat list
+        pkgList=$(readlink -f packagesList.txt)
+        cd $WrkDir
+
+        Num=0
+        ListFile=$(ls *.gz)
+        gzip -d $ListFile
+        ls
+        ListFile=$(ls)
+        for Pkg in $(seq 1 $packagesListNum)
+        do
+            
+            LineContent=$(head -n $Pkg $pkgList | tail -1)
+            name=$(grep -m 1 "${LineContent} (" $ListFile)
+            info=$(echo $name | awk -F"[()]" '{print $2}')
+            firstChar=$(echo $LineContent | cut -c1-1)
+                if [ "$(echo $name | cut -c1-3)" = "lib" ]; then
+                    firstChar="lib"
+                fi
+            # echo $LineContent
+            # echo $name
+            # echo $info | cut -d " " -f 1
+            # echo $firstChar
+
+            CurrURL=$(python3 ${ReadIniPrgm} ${IniFile} ${LineContent} u)
+            echo $CurrURL
+            # echo $LineContent
+            if [ "$(echo $CurrURL)" = "<Section: ${LineContent}> no url" ];then
+                PkgUrl="http://http.us.debian.org/debian/pool/main/${firstChar}/${LineContent}/${LineContent}_${info}_${arch}.deb"
+                if [ "$(curl -is $PkgUrl | head -n 1)" = "HTTP/2 404" ];then
+                    echo "link borked"
+                    FailedLinks=${FailedLinks}${PkgUrl}
+                    Num=$Num + 1
+                else
+                    python3 ${InfoAdderPrgm} ${LineContent} ${IniFile} u ${PkgUrl}
+                fi
+            echo "${Num}"
+            # else
+                # echo "${LineContent} has a url"
+            fi
+        done
+    fi
+
+
 }
 
 infoAdderFxn(){

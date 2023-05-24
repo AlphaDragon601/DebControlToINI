@@ -31,6 +31,9 @@ elif RequestedVal == "m":
 elif RequestedVal == "d":
     print(config[PrgmSection]["depends"])
 elif RequestedVal == "u":
-    print(config[PrgmSection]["URL"])
+    try:
+        print(config[PrgmSection]["URL"])
+    except:
+        print("no url")
 elif RequestedVal == "de":
     print(config[PrgmSection]["description"])
