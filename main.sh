@@ -196,8 +196,10 @@ builderFxn(){
     if [ "$1" = "-f" ];then
         echo "Reinstalling all packages from config"
         ForcInst=1
-    else
+    elif [ "$1" = "" ];then
         ForcInst=0
+    else
+        echo "unknown parameter ${1}...ignoring"
     fi
 
     WrkDir=$(mktemp -d)
