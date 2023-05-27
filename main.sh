@@ -4,6 +4,9 @@
 cd $(dirname $(readlink -f $0)) #take us to the directory of the script and its friends :)
 
 
+#url of chosen mirror
+Mirror="ftp-chi.osuosl.org"
+
 #fun text stuff
 ItalicsStart="\e[3m"
 ReturnToNorm="\e[0m"
@@ -19,6 +22,7 @@ RemovePkgPrgm=$(readlink -f RemovePkgFromIni.py)
 ReadIniPrgm=$(readlink -f ReadIni.py)
 InfoAdderPrgm=$(readlink -f InfoAdder.py)
 DepLister=$(readlink -f DepLister.py)
+FTPSearchPrgm=$(readlink -f FTPSearcher.py)
 #default these to y so the user can spam enter
 yn1="y"
 yn2="y"
@@ -115,19 +119,18 @@ installerFxn() {
     info=$(echo $FullName | awk -F"[()]" '{print $2}')
     firstChar=$(echo $FullName | cut -c1-1)
     if [ "$(echo $name | cut -c1-3)" = "lib" ]; then
-                    firstChar="lib"
+        firstChar=$(echo $name | cut -c1-4)
     fi
     ShortName=$(echo $FullName | cut -d " " -f 1)
 
-    # echo $FullName
-    # echo $ShortName
-    # echo $info
-    # echo $firstChar
+    echo "Scanning Repo..."
+    FileName=${ShortName}_${info}_${arch}.deb
+    PkgUrl=$(python3 ${FTPSearchPrgm} ${firstChar} ${FileName} ${Mirror})
 
-    PkgUrl="http://http.us.debian.org/debian/pool/main/${firstChar}/${ShortName}/${ShortName}_${info}_${arch}.deb"
 
-    # echo $PkgUrl
-    wget $PkgUrl
+
+    echo "${Mirror}/${PkgUrl}"
+    wget "${Mirror}/${PkgUrl}"
 
     PkgFile=$(ls *.deb)
     echo $PkgFile
@@ -136,7 +139,7 @@ installerFxn() {
 
     tar -xf control.tar.xz
     # outputs the status of config vs control differences to a temp file
-    python3 ${DebToIniPrgm} control ${IniFile} $1 n >> PyOut
+    python3 ${DebToIniPrgm} control ${IniFile} $PkgUrl n >> PyOut
     # put the info from the file to variables
     PkgName=$(head -n 1 PyOut | tail -1)
     DiffVersion=$(head -n 2 PyOut | tail -1)
@@ -190,6 +193,12 @@ uninstallerFxn(){
 
 builderFxn(){
 
+    if [ "$1" = "-f" ];then
+        echo "Reinstalling all packages from config"
+        ForcInst=1
+    else
+        ForcInst=0
+    fi
 
     WrkDir=$(mktemp -d)
     cd $WrkDir
@@ -202,9 +211,29 @@ builderFxn(){
     for Pkg in $(seq 1 $ConfigPackagesNum)
     do
         LineContent=$(head -n $Pkg ConfigPackagesList.txt | tail -1)
-        echo $LineContent
+        # echo $LineContent
         if grep -qw $LineContent packagesList.txt; then # grep needs option -q to make it a boolean output and w for whole world search
             echo $LineContent is installed
+
+            if [ $ForcInst = 1 ];then  
+                echo "reinstalling ${LineContent} because of -f flag"
+                PkgUrl=$(python3 ${ReadIniPrgm} ${IniFile} ${LineContent} "u")
+                wget $PkgUrl
+                # echo $PkgUrl
+                PkgFile=$(ls *.deb)
+                # ls
+                echo $PkgFile
+
+                ar -x $PkgFile
+
+                tar -xf control.tar.xz
+                python3 $DebToIniPrgm control ${IniFile} ${PkgUrl} o 
+                dpkg --force-all -i $PkgFile
+                rm $PkgFile
+                rm control
+                rm control.tar.xz
+            fi
+
         else
             URL=$(python3 ${ReadIniPrgm} ${IniFile} ${LineContent} "u") #Get the url from the config
             cd ..
@@ -265,32 +294,21 @@ DpkgBackupFxn(){
         do
             
             LineContent=$(head -n $Pkg $pkgList | tail -1)
-            name=$(grep -m 1 "${LineContent} (" $ListFile)
-            info=$(echo $name | awk -F"[()]" '{print $2}')
+            FullName=$(grep -m 1 "${LineContent} (" $ListFile)
+            ShortName=$(echo $FullName | cut -d " " -f 1)
+            info=$(echo $FullName | awk -F"[()]" '{print $2}')
             firstChar=$(echo $LineContent | cut -c1-1)
-                if [ "$(echo $name | cut -c1-3)" = "lib" ]; then
-                    firstChar="lib"
+                if [ "$(echo $FullName | cut -c1-3)" = "lib" ]; then
+                    firstChar=$(echo $FullName | cut -c1-4)
                 fi
-            # echo $LineContent
-            # echo $name
-            # echo $info | cut -d " " -f 1
-            # echo $firstChar
-
+            echo $ShortName
+            FileName=${ShortName}_${info}_${arch}.deb
             CurrURL=$(python3 ${ReadIniPrgm} ${IniFile} ${LineContent} u)
-            echo $CurrURL
+            # echo $CurrURL
             # echo $LineContent
-            if [ "$(echo $CurrURL)" = "<Section: ${LineContent}> no url" ];then
-                PkgUrl="http://http.us.debian.org/debian/pool/main/${firstChar}/${LineContent}/${LineContent}_${info}_${arch}.deb"
-                if [ "$(curl -is $PkgUrl | head -n 1)" = "HTTP/2 404" ];then
-                    echo "link borked"
-                    FailedLinks=${FailedLinks}${PkgUrl}
-                    Num=$Num + 1
-                else
-                    python3 ${InfoAdderPrgm} ${LineContent} ${IniFile} u ${PkgUrl}
-                fi
-            echo "${Num}"
-            # else
-                # echo "${LineContent} has a url"
+            if [ "$(echo $CurrURL)" = "no url" ];then
+                PkgUrl=$(python3 ${FTPSearchPrgm} ${firstChar} ${FileName} ${Mirror})
+                echo $PkgUrl
             fi
         done
     fi
@@ -384,7 +402,7 @@ else
             infoAdderFxn $2
             ;;
         -b)
-            builderFxn
+            builderFxn $2
             ;;
         -l)
             python3 ${ReadIniPrgm} ${IniFile} n l
@@ -396,5 +414,4 @@ else
             echo "option: $1 not found"
             ;;
     esac
-
 fi
