@@ -57,7 +57,16 @@ with open(InputControlFile, "r") as ControlFile:
             DescPkg = row.replace(DescTerm, "") # replace "source: " with nothing leaving just the title
             DescPkg = DescPkg.replace("\n", "") #remove newline
             
-
+#for use by the bash script after the user has said "yes install anyways"
+if Override == "o":
+    config[SourcePkg] = {
+        "Version" : VersionPkg,
+        "Architecture" : ArchPkg,
+        "Maintainer" : MaintanerPkg,
+        "Depends" : DependsPkg,
+        "URL" : URL,
+        "Description" : DescPkg
+    }
 
 # check if the program is already listed in the config
 if config.has_section(SourcePkg):
@@ -101,23 +110,12 @@ else: #if the package isn't there at all then just add it
         "URL" : URL,
         "Description" : DescPkg
     }
-    
-    with open(IniFile, "w") as configFile:
-        config.write(configFile, True)
+
         
-#for use by the bash script after the user has said "yes install anyways"
-if Override == "o":
-    config[SourcePkg] = {
-        "Version" : VersionPkg,
-        "Architecture" : ArchPkg,
-        "Maintainer" : MaintanerPkg,
-        "Depends" : DependsPkg,
-        "URL" : URL,
-        "Description" : DescPkg
-    }
+
     
-    with open(IniFile, "w") as configFile:
-        config.write(configFile, True)
+with open(IniFile, "w") as configFile:
+    config.write(configFile, True)
 
 
 
