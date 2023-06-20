@@ -319,7 +319,7 @@ DpkgBackupFxn(){
 }
 
 infoAdderFxn(){
-    echo "What info do you want to add? \n-(v)version\n-(a)architecture\n-(m)maintainer\n-(d)depends\n-(u)url\n-(de)description\n-(p)new package"
+    echo -e "What info do you want to add? \n-(v)version\n-(a)architecture\n-(m)maintainer\n-(d)depends\n-(u)url\n-(de)description\n-(p)new package"
     read ChosenInfo
     case $ChosenInfo in
         v)
@@ -361,18 +361,18 @@ infoAdderFxn(){
 }
 
 CmdInfo="
- \t-h for this list
- \t-i to install a url [main.sh -i ${ItalicsStart}pkg-name${ReturnToNorm}]
- \t-r to remove packages [main.sh -r ${ItalicsStart}pkg-name${ReturnToNorm}]
- \t-u to check for a program for updates [main.sh -u ${ItalicsStart}pkg-name${ReturnToNorm}]
- \t-d to list config dependencies [main.sh -d]
- \t-a add info to a package [main.sh -a ${ItalicsStart}pkg-name${ReturnToNorm} or if selecting option p main.sh -a]
- \t-l to list installed (based on config) [main.sh -l]
- \t-c to copy current packages into the config [main.sh -c]" 
+\t-h for this list
+\t-i to install a pkg [main.sh -i ${ItalicsStart}pkg-name${ReturnToNorm}]
+\t-r to remove packages [main.sh -r ${ItalicsStart}pkg-name${ReturnToNorm}]
+\t-u to check for a program for updates [main.sh -u ${ItalicsStart}pkg-name${ReturnToNorm}]
+\t-d to list config dependencies [main.sh -d]
+\t-a add info to a package [main.sh -a ${ItalicsStart}pkg-name${ReturnToNorm} or if selecting option p main.sh -a]
+\t-l to list installed (based on config) [main.sh -l]
+\t-c to copy current packages into the config [main.sh -c]" 
 
 
 if [ x"$1" = "x" ]; then
-    echo "no command entered, options are: $CmdInfo"
+    echo -e "no command entered, options are: $CmdInfo"
 else
     case $1 in
         -h)
