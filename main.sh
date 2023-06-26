@@ -32,7 +32,7 @@ yn4="y"
 #cleanup the temporary dir
 trap cleanup 1 2 3 6
 cleanup() {
-    echo "\nRemoving temporary files..."
+    echo -e "\nRemoving temporary files..."
     rm -rf "$WrkDir"
     exit
 }
@@ -103,30 +103,36 @@ installerFxn() {
     gzip -d $ListFile
     ListFile=$(ls)
 
-    # name=$(grep "${1} (" $ListFile)
+    NameWithDesc=$(grep "${1} (" $ListFile)
     
     touch TempGrepList
     grep -w "${1}" $ListFile > TempGrepList
     ResultCount=$(wc -l < TempGrepList)
+    if [ $ResultCount != 1 ];then
+        for Result in $(seq 1 $ResultCount) 
+        do
+            LineContent=$(head -n $Result TempGrepList | tail -1)
+            echo "Found Result [${Result}]: ${LineContent}"
+        done
+        read -p "Which package would you like installed?: " PkgSelection
 
-    for Result in $(seq 1 $ResultCount) 
-    do
-        LineContent=$(head -n $Result TempGrepList | tail -1)
-        echo "Found Result [${Result}]: ${LineContent}"
-    done
-    read -p "Which package would you like installed?: " PkgSelection
+        else
+            PkgSelection=1
+
+    fi
     FullName=$(head -n $PkgSelection TempGrepList | tail -1)
     info=$(echo $FullName | awk -F"[()]" '{print $2}')
     firstChar=$(echo $FullName | cut -c1-1)
-    if [ "$(echo $name | cut -c1-3)" = "lib" ]; then
-        firstChar=$(echo $name | cut -c1-4)
+    if [ "$(echo $NameWithDesc | cut -c1-3)" = "lib" ]; then
+        firstChar=$(echo $NameWithDesc | cut -c1-4)
     fi
     ShortName=$(echo $FullName | cut -d " " -f 1)
 
     echo "Scanning Repo..."
     FileName=${ShortName}_${info}_${arch}.deb
-    PkgUrl=$(python3 ${FTPSearchPrgm} ${firstChar} ${FileName} ${Mirror})
-
+    # echo $ShortName
+    PkgUrl=$(python3 ${FTPSearchPrgm} ${firstChar} ${FileName} ${ShortName} ${Mirror})
+    echo $PkgUrl
 
 
     echo "${Mirror}/${PkgUrl}"
@@ -382,7 +388,7 @@ else
             #loop through each entry and run the installer on them
             shift
             for var in "$@"; do
-                echo "\n$var"
+                echo -e "\n$var"
                 installerFxn $var
             done
             ;;
