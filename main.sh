@@ -201,68 +201,76 @@ uninstallerFxn(){
 
 builderFxn(){
 
-    if [ "$1" = "-f" ];then
-        echo "Reinstalling all packages from config"
-        ForcInst=1
-    elif [ "$1" = "" ];then
-        ForcInst=0
-    else
-        echo "unknown parameter ${1}...ignoring"
+    if grep -q "\[" $IniFile; then
+
+
+        if [ "$1" = "-f" ];then
+            echo "Reinstalling all packages from config"
+            ForcInst=1
+        elif [ "$1" = "" ];then
+            ForcInst=0
+        else
+            echo "unknown parameter ${1}...ignoring"
+        fi
+
+        WrkDir=$(mktemp -d)
+        cd $WrkDir
+        dpkg-query -f '${binary:Package}\n' -W > packagesList.txt #list of installed packages
+        python3 ${ReadIniPrgm} ${IniFile} null l > ConfigPackagesList.txt #list of packages in config
+
+        ConfigPackagesNum=$(wc -l < ConfigPackagesList.txt) #count lines in packageList
+        packagesListNum=$(wc -l < packagesList.txt)
+        echo "checking for packages to install..."
+        for Pkg in $(seq 1 $ConfigPackagesNum)
+        do
+            LineContent=$(head -n $Pkg ConfigPackagesList.txt | tail -1)
+            # echo $LineContent
+            if grep -qw $LineContent packagesList.txt; then # grep needs option -q to make it a boolean output and w for whole world search
+                echo $LineContent is installed
+
+                if [ $ForcInst = 1 ];then  
+                    echo "reinstalling ${LineContent} because of -f flag"
+                    PkgUrl=$(python3 ${ReadIniPrgm} ${IniFile} ${LineContent} "u")
+                    wget $PkgUrl
+                    # echo $PkgUrl
+                    PkgFile=$(ls *.deb)
+                    # ls
+                    echo $PkgFile
+
+                    ar -x $PkgFile
+
+                    tar -xf control.tar.xz
+                    python3 $DebToIniPrgm control ${IniFile} ${PkgUrl} o 
+                    dpkg --force-all -i $PkgFile
+                    rm $PkgFile
+                    rm control
+                    rm control.tar.xz
+                fi
+
+            else
+                URL=$(python3 ${ReadIniPrgm} ${IniFile} ${LineContent} "u") #Get the url from the config
+                cd ..
+                installerFxn $URL
+            fi
+        done
+        echo "checking for packages to uninstall..."
+        for Pkg in $(seq 1 $packagesListNum)
+        do
+            LineContent=$(head -n $Pkg packagesList.txt | tail -1)
+            if grep -qw $LineContent ConfigPackagesList.txt; then # grep needs option -q to make it a boolean output and w for whole world search
+                echo $LineContent is in config
+            else
+                read -p "$LineContent is not in config, would you like to uninstall it?(y/n)" $yn1
+                if [ "$yn1" == "y" ]; then
+                    uninstallerFxn $LineContent
+                fi
+            fi
+        done
+    
+        else
+            echo "This config is empty, do not build it"
+    
     fi
-
-    WrkDir=$(mktemp -d)
-    cd $WrkDir
-    dpkg-query -f '${binary:Package}\n' -W > packagesList.txt #list of installed packages
-    python3 ${ReadIniPrgm} ${IniFile} null l > ConfigPackagesList.txt #list of packages in config
-
-    ConfigPackagesNum=$(wc -l < ConfigPackagesList.txt) #count lines in packageList
-    packagesListNum=$(wc -l < packagesList.txt)
-    echo "checking for packages to install..."
-    for Pkg in $(seq 1 $ConfigPackagesNum)
-    do
-        LineContent=$(head -n $Pkg ConfigPackagesList.txt | tail -1)
-        # echo $LineContent
-        if grep -qw $LineContent packagesList.txt; then # grep needs option -q to make it a boolean output and w for whole world search
-            echo $LineContent is installed
-
-            if [ $ForcInst = 1 ];then  
-                echo "reinstalling ${LineContent} because of -f flag"
-                PkgUrl=$(python3 ${ReadIniPrgm} ${IniFile} ${LineContent} "u")
-                wget $PkgUrl
-                # echo $PkgUrl
-                PkgFile=$(ls *.deb)
-                # ls
-                echo $PkgFile
-
-                ar -x $PkgFile
-
-                tar -xf control.tar.xz
-                python3 $DebToIniPrgm control ${IniFile} ${PkgUrl} o 
-                dpkg --force-all -i $PkgFile
-                rm $PkgFile
-                rm control
-                rm control.tar.xz
-            fi
-
-        else
-            URL=$(python3 ${ReadIniPrgm} ${IniFile} ${LineContent} "u") #Get the url from the config
-            cd ..
-            installerFxn $URL
-        fi
-    done
-    echo "checking for packages to uninstall..."
-    for Pkg in $(seq 1 $packagesListNum)
-    do
-        LineContent=$(head -n $Pkg packagesList.txt | tail -1)
-        if grep -qw $LineContent ConfigPackagesList.txt; then # grep needs option -q to make it a boolean output and w for whole world search
-            echo $LineContent is in config
-        else
-            read -p "$LineContent is not in config, would you like to uninstall it?(y/n)" $yn1
-            if [ "$yn1" == "y" ]; then
-                uninstallerFxn $LineContent
-            fi
-        fi
-    done
 
 }
 
