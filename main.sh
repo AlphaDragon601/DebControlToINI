@@ -392,7 +392,7 @@ if [ x"$1" = "x" ]; then
 else
     case $1 in
         -h)
-            echo "Command options are: $CmdInfo"
+            echo -e "Command options are: $CmdInfo"
             ;;
         -i)
             #loop through each entry and run the installer on them
@@ -406,7 +406,7 @@ else
             #loop through each entry and run the uninstaller on them
             shift
             for var in "$@"; do
-                echo "\n$var"
+                echo -e "\n$var"
                 uninstallerFxn $var
             done
             ;;
