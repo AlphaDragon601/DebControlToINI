@@ -105,13 +105,15 @@ installerFxn() {
 
     NameWithDesc=$(grep "${1} (" $ListFile)
     
-    touch TempGrepList
-    grep -w "${1}" $ListFile > TempGrepList
-    ResultCount=$(wc -l < TempGrepList)
+    touch TempGrepListDirty
+    touch TempGrepListClean
+    grep -w "${1}" $ListFile > TempGrepListDirty
+    grep -v "virtual package provided by" TempGrepListDirty > TempGrepListClean #filter out virtual package listings
+    ResultCount=$(wc -l < TempGrepListClean)
     if [ $ResultCount != 1 ];then
         for Result in $(seq 1 $ResultCount) 
         do
-            LineContent=$(head -n $Result TempGrepList | tail -1)
+            LineContent=$(head -n $Result TempGrepListClean | tail -1)
             echo "Found Result [${Result}]: ${LineContent}"
         done
         read -p "Which package would you like installed?: " PkgSelection
@@ -120,7 +122,7 @@ installerFxn() {
             PkgSelection=1
 
     fi
-    FullName=$(head -n $PkgSelection TempGrepList | tail -1)
+    FullName=$(head -n $PkgSelection TempGrepListClean | tail -1)
     info=$(echo $FullName | awk -F"[()]" '{print $2}')
     firstChar=$(echo $FullName | cut -c1-1)
     if [ "$(echo $NameWithDesc | cut -c1-3)" = "lib" ]; then
